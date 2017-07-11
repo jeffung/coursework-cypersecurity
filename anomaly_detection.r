@@ -2,7 +2,7 @@
 library(RCurl)
 
 #Get URL's from GitHub for train and test data
-trainURL <- getURL("https://github.com/CMPT-318/Cybersecurity-Project/tree/master/Data/Train/train.csv")
+trainURL <- getURL("https://raw.githubusercontent.com/CMPT-318/Cybersecurity-Project/master/Data/Train/train.csv")
 test1URL <- getURL("https://raw.githubusercontent.com/CMPT-318/Cybersecurity-Project/master/Data/Test/test_v1.csv")
 test2URL <- getURL("https://raw.githubusercontent.com/CMPT-318/Cybersecurity-Project/master/Data/Test/test_v2.csv")
 
