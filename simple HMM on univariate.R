@@ -5,7 +5,7 @@ library(mhsmm)
 #day subset
 
 traindayform <- formatMhsmm(data.frame(train$Global_active_power[1:50000]))
-testdayform <- formatMhsmm(data.frame(test$Global_active_power[1:1000]))
+testdayform <- formatMhsmm(data.frame(test1$Global_active_power[1:1000]))
 #end of data
 # 4 states HMM    
 k=2
