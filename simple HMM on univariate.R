@@ -3,9 +3,8 @@ library(mhsmm)
 #dataset <- read.csv('file.csv',header=TRUE)
 #train <- formatMhsmm(data.frame(TotalFlow$FlowLevel))
 #day subset
-
-traindayform <- formatMhsmm(data.frame(train$Global_active_power[1:50000]))
-testdayform <- formatMhsmm(data.frame(test1$Global_active_power[1:1000]))
+traindayform <- formatMhsmm(data.frame(trainFull$Global_active_power[1:50000]))
+testdayform <- formatMhsmm(data.frame(test1Full$Global_active_power[1:1000]))
 #end of data
 # 4 states HMM    
 k=2
