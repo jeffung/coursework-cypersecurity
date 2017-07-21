@@ -10,9 +10,6 @@ trainFull <- read.csv(text = trainURL)
 test1Full <- read.csv(text = test1URL)
 test2Full <- read.csv(text = test2URL)
 
-train <- trainFull[, c(2,4)]
-train$DateTime <- paste(trainFull$Date, trainFull$Time)
-
 rm(trainURL)
 rm(test1URL)
 rm(test2URL)

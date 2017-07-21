@@ -9,6 +9,8 @@ apply.hourly <- function(x, FUN,...) {
   period.apply(x, ep, FUN, ...)
 }
 
+train <- trainFull[, c(2,4)]
+train$DateTime <- paste(trainFull$Date, trainFull$Time)
 train$DateTime <- as.POSIXct(train$DateTime, format='%d/%m/%Y %H:%M:%S')
 train <- na.omit(train)
 
