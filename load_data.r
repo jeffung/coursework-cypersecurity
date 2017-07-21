@@ -13,6 +13,6 @@ test2Full <- read.csv(text = test2URL)
 train <- trainFull[, c(2,4)]
 train$DateTime <- paste(trainFull$Date, trainFull$Time)
 
-#Format dates
-train$DateTime <- as.POSIXct(train$DateTime, format='%d/%m/%Y %H:%M:%S')
-train <- na.omit(train)
+rm(trainURL)
+rm(test1URL)
+rm(test2URL)

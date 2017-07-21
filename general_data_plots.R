@@ -9,6 +9,9 @@ apply.hourly <- function(x, FUN,...) {
   period.apply(x, ep, FUN, ...)
 }
 
+train$DateTime <- as.POSIXct(train$DateTime, format='%d/%m/%Y %H:%M:%S')
+train <- na.omit(train)
+
 trainTS <- xts(train$Global_active_power, order.by = train$DateTime)
 minutes <- fortify(trainTS)
 hourly <- fortify(apply.hourly(trainTS,mean))
