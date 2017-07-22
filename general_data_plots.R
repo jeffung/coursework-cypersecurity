@@ -43,11 +43,10 @@ plot(z, xaxt = "n", ylab="Average Global Active Power", xlab="Time of Day", col=
 axis(1, total$Date, format(total$Date, "%H:%M:%S"), cex.axis = .7)
 legend('topleft', names(total)[-1] ,lty=1, col=c("red","green"), bty='n', cex=.75)
 
-
-JanDay <- hourly %>% filter(Date >= '2007-01-09 00:59:00' & Date <= '2007-01-09 23:59:00')
+JanDay <- hourly %>% filter(Date >= '2007-01-11 00:59:00' & Date <= '2007-01-11 23:59:00')
 JanDay$Date <- strftime(JanDay$Date, format="%H:%M:%S")
 JanDay$Date <- as.POSIXct(JanDay$Date, format="%H:%M:%S")
-JulyDay <- hourly %>% filter(Date >= '2007-07-09 00:59:00' & Date <= '2007-07-09 23:59:00')
+JulyDay <- hourly %>% filter(Date >= '2007-07-11 00:59:00' & Date <= '2007-07-11 23:59:00')
 JulyDay$Date <- strftime(JulyDay$Date, format="%H:%M:%S")
 JulyDay$Date <- as.POSIXct(JulyDay$Date, format="%H:%M:%S")
 total <- merge(x = JanDay, y = JulyDay, by = "Date", all.x = TRUE)
@@ -94,3 +93,12 @@ axis(1, january$Date, format(as.Date(january$Date), "%b %d"),  cex.axis = .7)
 z <- read.zoo(july, header = TRUE)
 plot(z, xaxt="n", ylab="Average Global Active Power", xlab="July", col="green", plot.type = "single")
 axis(1, july$Date, format(as.Date(july$Date), "%b %d"),  cex.axis = .7)
+
+daySub <- minutes %>% filter(Date >= '2007-01-09 16:30:00' & Date <= '2007-01-09 22:00:00')
+daySub$Date <- strftime(daySub$Date, format="%H:%M:%S")
+daySub$Date <- as.POSIXct(daySub$Date, format="%H:%M:%S")
+
+z <- read.zoo(daySub, header = TRUE)
+plot(z, xaxt = "n", ylab="Average Global Active Power", xlab="Time of Day", col="red", plot.type = "single")
+axis(1, daySub$Date, format(daySub$Date, "%H:%M:%S"), cex.axis = .7)
+summary(daySub)
