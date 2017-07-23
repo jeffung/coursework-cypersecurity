@@ -6,12 +6,21 @@ train <- trainFull[, c(2,4)]
 train$DateTime <- paste(trainFull$Date, trainFull$Time)
 train$DateTime <- as.POSIXct(train$DateTime, format='%d/%m/%Y %H:%M:%S')
 train <- na.omit(train)
+test1Sub <- test1Full[, c(2,4)]
+test1Sub$DateTime <- paste(test1Full$Date, test1Full$Time)
+test1Sub$DateTime <- as.POSIXct(test1Sub$DateTime, format='%d/%m/%Y %H:%M:%S')
+test1Sub <- na.omit(test1Sub)
+test2Sub <- test2Full[, c(2,4)]
+test2Sub$DateTime <- paste(test2Full$Date, test2Full$Time)
+test2Sub$DateTime <- as.POSIXct(test2Sub$DateTime, format='%d/%m/%Y %H:%M:%S')
+test2Sub <- na.omit(test2Sub)
 
 traindayform <- formatMhsmm(data.frame(train$Global_active_power))
-testdayform <- formatMhsmm(data.frame(test1Sub$Global_active_power))
+test1form <- formatMhsmm(data.frame(test1Sub$Global_active_power))
+test2form <- formatMhsmm(data.frame(test1Sub$Global_active_power))
 
 # number of states HMM    
-k=11
+k=12
 
 #init probabilities
 init <- rep(1/k, k)
@@ -23,41 +32,9 @@ P <- matrix(rep(1/k, k*k), nrow = k)
 muVec <- c(1:k)
 sigmaVec <- c(1:k)
 
-s <- with( train , train[ Global_active_power <= 0.25, ] )
-muVec[1] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[1] <- var(s$Global_active_power, na.rm = TRUE)
-
-s <- with( train , train[ Global_active_power > 0.25 & Global_active_power <= 0.3451, ] )
-muVec[2] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[2] <- var(s$Global_active_power, na.rm = TRUE)
-
-s <- with( train , train[ Global_active_power > 0.3451 & Global_active_power <= 0.5329, ] )
-muVec[3] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[3] <- var(s$Global_active_power, na.rm = TRUE)
-
-s <- with( train , train[ Global_active_power > 0.5329 & Global_active_power <= 0.7738, ] )
-muVec[4] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[4] <- var(s$Global_active_power, na.rm = TRUE)
-
-s <- with( train , train[ Global_active_power > 0.7738 & Global_active_power <= 1.2851, ] )
-muVec[6] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[6] <- var(s$Global_active_power, na.rm = TRUE)
-
-s <- with( train , train[ Global_active_power > 1.2851 & Global_active_power <= 1.684, ] )
-muVec[7] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[7] <- var(s$Global_active_power, na.rm = TRUE)
-
-s <- with( train , train[ Global_active_power > 1.684 & Global_active_power <= 2.314, ] )
-muVec[8] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[8] <- var(s$Global_active_power, na.rm = TRUE)
-
-s <- with( train , train[ Global_active_power > 2.314 & Global_active_power <= 3.338, ] )
-muVec[9] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[9] <- var(s$Global_active_power, na.rm = TRUE)
-
-s <- with( train , train[ Global_active_power > 3.338, ] )
-muVec[10] <- mean(s$Global_active_power, na.rm = TRUE)
-sigmaVec[10] <- var(s$Global_active_power, na.rm = TRUE)
+muVec <- c(0.5447714, 0.2779779, 1.8263834, 1.5501700, 1.9615561, 0.8685399, 2.7655574, 0.5594927, 1.2849762, 0.1710025, 4.1631672, 0.4510502)
+sigmaVec <- c(0.000668871, 0.002888363, 0.486437022, 0.026234604, 0.061892010, 0.129187716, 0.235773146, 0.026516903, 0.020386461, 0.003444033,
+              1.131033014, 0.002118213)
 
 b <- list(mu = muVec, sigma = sigmaVec) 
 
@@ -66,14 +43,14 @@ startmodel <- hmmspec(init = init, trans = P, parms.emis = b, dens.emis = dnorm.
 startmodel
 
 #EM algorithm fits an HMM to the data
-hmm <- hmmfit(traindayform$x, startmodel , mstep = mstep.norm,maxit = 200)
+hmm <- hmmfit(traindayform$x, startmodel , mstep = mstep.norm,maxit = 200, tol=1e-02)
 
 #print resulting HMM parameters
 summary(hmm)
 plot(hmm$loglik, type="b", ylab="log-likelihood", xlab="Iteration")
 
 yhat1 <- predict (hmm,traindayform$x)
-yhat2 <- predict (hmm,testdayform$x)
+yhat2 <- predict (hmm,test1form$x)
 
 #plot(yhat1)
 #plot(yhat2)
