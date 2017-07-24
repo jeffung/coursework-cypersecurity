@@ -94,7 +94,7 @@ z <- read.zoo(july, header = TRUE)
 plot(z, xaxt="n", ylab="Average Global Active Power", xlab="July", col="green", plot.type = "single")
 axis(1, july$Date, format(as.Date(july$Date), "%b %d"),  cex.axis = .7)
 
-daySub <- hourly %>% filter(Date >= '2007-01-11 00:59:00' & Date <= '2007-01-11 23:59:00')
+daySub <- minutes %>% filter(Date >= '2007-01-11 00:01:00' & Date <= '2007-01-11 5:59:00')
 daySub$Date <- strftime(daySub$Date, format="%H:%M:%S")
 daySub$Date <- as.POSIXct(daySub$Date, format="%H:%M:%S")
 

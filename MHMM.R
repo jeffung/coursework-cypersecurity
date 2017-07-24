@@ -16,7 +16,7 @@ test2Sub$DateTime <- as.POSIXct(test2Sub$DateTime, format='%d/%m/%Y %H:%M:%S')
 test2Sub <- na.omit(test2Sub)
 
 traindayform <- formatMhsmm(data.frame(train$Global_active_power))
-test1form <- formatMhsmm(data.frame(test1Sub$Global_active_power[1:1000]))
+test1form <- formatMhsmm(data.frame(test1Sub$Global_active_power))
 test2form <- formatMhsmm(data.frame(test1Sub$Global_active_power))
 
 # number of states HMM    
@@ -43,7 +43,7 @@ startmodel <- hmmspec(init = init, trans = P, parms.emis = b, dens.emis = dnorm.
 startmodel
 
 #EM algorithm fits an HMM to the data
-hmm <- hmmfit(traindayform$x, startmodel , mstep = mstep.norm,maxit = 200)
+hmm <- hmmfit(traindayform$x, startmodel , mstep = mstep.norm,maxit = 200, tol=1e-02)
 
 #print resulting HMM parameters
 summary(hmm)
@@ -55,7 +55,3 @@ yhat2 <- predict (hmm,test1form$x)
 #plot(yhat1)
 #plot(yhat2)
 hmm$loglik
-
-finalmodel <- hmmspec(init = hmm$model$init, trans = hmm$model$transition, parms.emission = hmm$model$parms.emission, 
-                      dens.emission = dnorm.hsmm)
-testSim <- simulate.hmmspec(finalmodel, nsim = length(train$Global_active_power), seed = 123456, rand.emission = rnorm.hsmm)
