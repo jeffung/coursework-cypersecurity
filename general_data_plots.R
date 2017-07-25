@@ -26,7 +26,7 @@ colnames(daily) <- c("Date", "Global_active_power")
 colnames(monthly) <- c("Date", "Global_active_power")
 
 z <- read.zoo(monthly, header = TRUE)
-plot(z, xaxt = "n", ylab="Average Global Active Power", xlab="Month", xy.lines = TRUE, col="red")
+plot(z, xaxt = "n", ylab="Average Global Active Power (kW)", xlab="Month", xy.lines = TRUE, col="red")
 axis(1, monthly$Date, format(monthly$Date, "%b-%y"), cex.axis = .7)
 
 JanDay <- minutes %>% filter(Date >= '2007-01-09 00:59:00' & Date <= '2007-01-09 23:59:00')
@@ -39,7 +39,7 @@ total <- merge(x = JanDay, y = JulyDay, by = "Date", all.x = TRUE)
 colnames(total) <- c("Date", "Jan 9, 2007", "July 9, 2007")
 
 z <- read.zoo(total, header = TRUE)
-plot(z, xaxt = "n", ylab="Average Global Active Power", xlab="Time of Day", col=c("red","green"), plot.type = "single")
+plot(z, xaxt = "n", ylab="Global Active Power (kW)", xlab="Time of Day", col=c("red","green"), plot.type = "single")
 axis(1, total$Date, format(total$Date, "%H:%M:%S"), cex.axis = .7)
 legend('topleft', names(total)[-1] ,lty=1, col=c("red","green"), bty='n', cex=.75)
 
@@ -53,13 +53,13 @@ total <- merge(x = JanDay, y = JulyDay, by = "Date", all.x = TRUE)
 colnames(total) <- c("Date", "Jan 9, 2007", "July 9, 2007")
 
 z <- read.zoo(total, header = TRUE)
-plot(z, xaxt = "n", ylab="Average Global Active Power", xlab="Time of Day", col=c("red","green"), plot.type = "single")
+plot(z, xaxt = "n", ylab="Average Global Active Power (kW)", xlab="Time of Day", col=c("red","green"), plot.type = "single")
 axis(1, total$Date, format(total$Date, "%H:%M:%S"), cex.axis = .7)
 legend('topleft', names(total)[-1] ,lty=1, col=c("red","green"), bty='n', cex=.75)
 
 yearDaily <- daily %>% filter(Date >= '2007-01-01 00:59:00' & Date <= '2007-12-31 23:59:00')
 z <- read.zoo(yearDaily, header=TRUE)
-plot(z, xaxt = "n", ylab="Average Global Active Power", xlab="Date", col="red", plot.type = "single")
+plot(z, xaxt = "n", ylab="Average Global Active Power (kW)", xlab="Date", col="red", plot.type = "single")
 axis(1, yearDaily$Date, format(yearDaily$Date, "%b-%y"), cex.axis = .7)
 
 dayHourlyAverage <- with( hourly , hourly[ hour( Date ) >= 8 & hour( Date ) < 20, ] )
@@ -79,7 +79,7 @@ colnames(total) <- c("Date", "Day", "Night")
 total$Date <- as.POSIXct(paste(as.character(total$Date), "21:01:00"), format="%Y-%m-%d %H:%M:%S")
 
 z <- read.zoo(total, header = TRUE)
-plot(z, xaxt="n", ylab="Average Global Active Power", xlab="Date", col=c("red", "green"), plot.type = "single")
+plot(z, xaxt="n", ylab="Average Global Active Power (kW)", xlab="Date", col=c("red", "green"), plot.type = "single")
 axis(1, total$Date, format(as.Date(total$Date), "%b %y"),  cex.axis = .7)
 legend('topleft', names(total)[-1] ,lty=1, col=c("red","green"), bty='n', cex=.75)
 
@@ -88,17 +88,24 @@ july <- hourly %>% filter(Date >= "2007-07-01 00:59:00" & Date <= "2007-07-31 23
 
 par(mfrow=c(2,1))
 z <- read.zoo(january, header = TRUE)
-plot(z, xaxt="n", ylab="Average Global Active Power", xlab="January", col="red", plot.type = "single")
+plot(z, xaxt="n", ylab="Average Global Active Power (kW)", xlab="January", col="red", plot.type = "single")
 axis(1, january$Date, format(as.Date(january$Date), "%b %d"),  cex.axis = .7)
 z <- read.zoo(july, header = TRUE)
-plot(z, xaxt="n", ylab="Average Global Active Power", xlab="July", col="green", plot.type = "single")
+plot(z, xaxt="n", ylab="Average Global Active Power (kW)", xlab="July", col="green", plot.type = "single")
 axis(1, july$Date, format(as.Date(july$Date), "%b %d"),  cex.axis = .7)
 
-daySub <- minutes %>% filter(Date >= '2007-01-11 00:01:00' & Date <= '2007-01-11 5:59:00')
-daySub$Date <- strftime(daySub$Date, format="%H:%M:%S")
-daySub$Date <- as.POSIXct(daySub$Date, format="%H:%M:%S")
+averageSummerDay <- cbind(c(1:28),c(1:28)) 
+colnames(averageSummerDay) <- c("Day", "Global_active_power")
+averageWinterDay <- cbind(c(1:28),c(1:28)) 
+colnames(averageWinterDay) <- c("Day", "Global_active_power")
+for (i in 1:28) {
+  tmp <- with(minutes, minutes[day(Date) == i & month(Date) >= 6 & month(Date) <= 9, ])
+  averageSummerDay[i,2] <- mean(tmp$Global_active_power, na.rm = TRUE)
+  tmp <- with(minutes, minutes[day(Date) == i & month(Date) <= 2 | month(Date) >= 11, ])
+  averageWinterDay[i,2] <- mean(tmp$Global_active_power, na.rm = TRUE)
+}
+rm(tmp)
 
-z <- read.zoo(daySub, header = TRUE)
-plot(z, xaxt = "n", ylab="Average Global Active Power", xlab="Time of Day", col="red", plot.type = "single")
-axis(1, daySub$Date, format(daySub$Date, "%H:%M:%S"), cex.axis = .7)
-summary(daySub)
+par(mfrow=c(2,1))
+plot(averageSummerDay, xlab="Day of the Month - Summer", ylab="Average Global Active Power (kW)", col="red", type="l")
+plot(averageWinterDay, xlab="Day of the Month - Winter", ylab="Average Global Active Power (kW)", col="green", type="l")

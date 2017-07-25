@@ -36,6 +36,9 @@ muVec <- c(0.5447714, 0.2779779, 1.8263834, 1.5501700, 1.9615561, 0.8685399, 2.7
 sigmaVec <- c(0.000668871, 0.002888363, 0.486437022, 0.026234604, 0.061892010, 0.129187716, 0.235773146, 0.026516903, 0.020386461, 0.003444033,
               1.131033014, 0.002118213)
 
+muVec[3] <- muVec[3] * 0.85
+sigmaVec[3] <- sigmaVec[3] * 0.85
+
 b <- list(mu = muVec, sigma = sigmaVec) 
 
 #starting model for EM
@@ -43,7 +46,7 @@ startmodel <- hmmspec(init = init, trans = P, parms.emis = b, dens.emis = dnorm.
 startmodel
 
 #EM algorithm fits an HMM to the data
-hmm <- hmmfit(traindayform$x, startmodel , mstep = mstep.norm,maxit = 200)
+hmm <- hmmfit(traindayform$x, startmodel , mstep = mstep.norm,maxit = 200,tol=1e-02)
 
 #print resulting HMM parameters
 summary(hmm)
@@ -54,8 +57,4 @@ yhat2 <- predict (hmm,test1form$x)
 
 #plot(yhat1)
 #plot(yhat2)
-hmm$loglik
-
-finalmodel <- hmmspec(init = hmm$model$init, trans = hmm$model$transition, parms.emission = hmm$model$parms.emission, 
-                      dens.emission = dnorm.hsmm)
-testSim <- simulate.hmmspec(finalmodel, nsim = length(train$Global_active_power), seed = 123456, rand.emission = rnorm.hsmm)
+hmm$loglik[length(hmm$loglik)]
