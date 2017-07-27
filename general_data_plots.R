@@ -9,7 +9,8 @@ apply.hourly <- function(x, FUN,...) {
   period.apply(x, ep, FUN, ...)
 }
 
-train <- trainFull[, c(2,4)]
+train <- trainFull[, c(1,3)]
+colnames(train) <- c("DateTime", "Global_active_power")
 train$DateTime <- paste(trainFull$Date, trainFull$Time)
 train$DateTime <- as.POSIXct(train$DateTime, format='%d/%m/%Y %H:%M:%S')
 train <- na.omit(train)
@@ -81,7 +82,7 @@ total$Date <- as.POSIXct(paste(as.character(total$Date), "21:01:00"), format="%Y
 z <- read.zoo(total, header = TRUE)
 plot(z, xaxt="n", ylab="Average Global Active Power (kW)", xlab="Date", col=c("red", "green"), plot.type = "single")
 axis(1, total$Date, format(as.Date(total$Date), "%b %y"),  cex.axis = .7)
-legend('topleft', names(total)[-1] ,lty=1, col=c("red","green"), bty='n', cex=.75)
+legend('topright', names(total)[-1] ,lty=1, col=c("red","green"), bty='n', cex=.75)
 
 january <- hourly %>% filter(Date >= "2007-01-01 00:59:00" & Date <= "2007-01-31 23:59:00")
 july <- hourly %>% filter(Date >= "2007-07-01 00:59:00" & Date <= "2007-07-31 23:59:00")
