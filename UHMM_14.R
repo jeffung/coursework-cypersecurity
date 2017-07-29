@@ -11,7 +11,7 @@ train <- na.omit(train)
 traindayform <- formatMhsmm(data.frame(train$Global_active_power))
 
 # number of states HMM    
-k=13
+k=14
 
 #init probabilities
 init <- rep(1/k, k)
@@ -24,12 +24,9 @@ muVec <- c(1:k)
 sigmaVec <- c(1:k)
 
 muVec <- c(0.5484832, 0.3271606, 0.2719592, 3.1713822, 1.2757978, 1.8831006, 0.8581603, 2.4676883, 0.5519891, 1.8237814, 1.5377176, 4.7048570,
-           0.9052916)
+           0.9052916, 1.40338)
 sigmaVec <- c(0.0008257707, 0.0202114701, 0.0029434861, 0.3858464933, 0.0210970072, 0.0460559523, 0.1301456018, 0.0741345796, 0.0252060821,
-              0.4619841991, 0.0251711090, 1.0975356331, 0.2188596792)
-
-muVec[13] <- muVec[13] * 0.15
-sigmaVec[13] <- sigmaVec[13] * 0.15
+              0.4619841991, 0.0251711090, 1.0975356331, 0.2188596792, 0.02321)
 
 b <- list(mu = muVec, sigma = sigmaVec) 
 
@@ -38,15 +35,15 @@ startmodel <- hmmspec(init = init, trans = P, parms.emis = b, dens.emis = dnorm.
 startmodel
 
 #EM algorithm fits an HMM to the data
-hmm_13 <- hmmfit(traindayform$x, startmodel, mstep = mstep.norm,maxit = 200, tol=1e-02)
+hmm_14 <- hmmfit(traindayform$x, startmodel, mstep = mstep.norm,maxit = 200, tol=1e-02)
 
 #print resulting HMM parameters
-summary(hmm_13)
-plot(hmm_13$loglik, type="b", ylab="log-likelihood", xlab="Iteration")
+summary(hmm_14)
+plot(hmm_14$loglik, type="b", ylab="log-likelihood", xlab="Iteration")
 
-#yhat1 <- predict (hmm_13,traindayform$x)
-#yhat2 <- predict (hmm_13,test1form$x)
+#yhat1 <- predict (hmm_14,traindayform$x)
+#yhat2 <- predict (hmm_14,test1form$x)
 
 #plot(yhat1)
 #plot(yhat2)
-hmm_13$loglik[length(hmm_13$loglik)]
+hmm_14$loglik[length(hmm_14$loglik)]

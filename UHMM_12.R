@@ -8,7 +8,15 @@ train$DateTime <- paste(trainFull$Date, trainFull$Time)
 train$DateTime <- as.POSIXct(train$DateTime, format='%d/%m/%Y %H:%M:%S')
 train <- na.omit(train)
 
+test <- test1Full[, c(1,3)]
+colnames(test) <- c("DateTime", "Global_active_power")
+test$DateTime <- paste(test1Full$Date, test1Full$Time)
+test$DateTime <- as.POSIXct(test$DateTime, format='%d/%m/%Y %H:%M:%S')
+test <- na.omit(test)
+
 traindayform <- formatMhsmm(data.frame(train$Global_active_power))
+noramlform <- formatMhsmm(data.frame(train$Global_active_power[1:1000]))
+testform <- formatMhsmm(data.frame(test$Global_active_power))
 
 # number of states HMM    
 k=12
@@ -40,8 +48,10 @@ hmm_12 <- hmmfit(traindayform$x, startmodel, mstep = mstep.norm,maxit = 200, tol
 summary(hmm_12)
 plot(hmm_12$loglik, type="b", ylab="log-likelihood", xlab="Iteration")
 
-#yhat1 <- predict (hmm_12,traindayform$x)
-#yhat2 <- predict (hmm_12,test1form$x)
+yhat1 <- predict (hmm_12,testform$x)
+yhat1$loglik
+yhat2 <- predict (hmm_12,noramlform$x)
+yhat2$loglik
 
 #plot(yhat1)
 #plot(yhat2)
