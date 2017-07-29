@@ -62,35 +62,29 @@ for (k in seq(1,4)){
   Length <- floor(nrow(test1)/windowSize)
   
   anomaly1 <- vector(mode="integer", length=Length)
+  anomaly2 <- vector(mode="integer", length=Length)
   for (i in seq(1, Length)){
     start <- (i-1)*windowSize + 1
     end = start + windowSize -1
-    X <- test1$Global_active_power[start:end]
-    X <- predict(hmm_12, X, method="viterbi")
+    X1 <- test1$Global_active_power[start:end]
+    X1 <- predict(hmm_12, X1, method="viterbi")
     j = (i-1)%%numInterval +1
-    if (X$loglik >= minValues[j] & X$loglik <= maxValues[j]){
+    if (X1$loglik >= minValues[j] & X1$loglik <= maxValues[j]){
       anomaly1[i] = 0
     }
     else{
       anomaly1[i] = 1
     }
-  }
-  print(length(which(anomaly1==1))/Length)
-  
-  anomaly2 <- vector(mode="integer", length=Length)
-  for (i in seq(1, Length)){
-    start <- (i-1)*windowSize + 1
-    end = start + windowSize -1
-    X <- test2$Global_active_power[start:end]
-    X <- predict(hmm_12, X, method="viterbi")
-    j = (i-1)%%numInterval +1
-    if (X$loglik >= minValues[j] & X$loglik <= maxValues[j]){
+    X2 <- test2$Global_active_power[start:end]
+    X2 <- predict(hmm_12, X2, method="viterbi")
+    if (X2$loglik >= minValues[j] & X2$loglik <= maxValues[j]){
       anomaly2[i] = 0
     }
     else{
       anomaly2[i] = 1
     }
   }
+  print(length(which(anomaly1==1))/Length)
   print(length(which(anomaly2==1))/Length)
   
   outfile <- paste("coolective_",windowSize,".txt",sep="")
