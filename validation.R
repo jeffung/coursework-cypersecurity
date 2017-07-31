@@ -42,17 +42,29 @@ hmm <- hmmfit(trainfullform$x, startmodel , mstep = mstep.norm,maxit = 200, tol=
 
 summary(hmm)
 
-result <- predict (hmm,validationset)
+result <- predict (hmm_8,validationset)
 
-difference <- NULL
-value <- NULL
+difference <- 0
+threshold <- 2
+totalAnomalies <- length(which(corrupt == TRUE))
+detectedAnomalies <- 0
+actualAnomalies <- 0
 
 for (i in 1:length(validationset)) {
-  difference[i] <- abs(result$s[i] - validationset[i]) 
-  value[i] <- difference/(result$x[i]*0.5)
+  state <- result$s[i]
+  expected <- hmm_8$model$parms.emission$mu[state]
+  alpha <- hmm_8$model$parms.emission$sigma[state]
+  difference <- abs(expected - validationset[i]) 
+  if (difference >= threshold) {
+    detectedAnomalies <- detectedAnomalies + 1
+    if (corrupt[i]) {
+      actualAnomalies <- actualAnomalies + 1
+    }
+  }
 }
-
-
-
-
-
+precision <- actualAnomalies / detectedAnomalies
+recall <- actualAnomalies / totalAnomalies
+fScore <- (2 * precision * recall) / (precision + recall)
+precision
+recall
+fScore
