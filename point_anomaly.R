@@ -1,23 +1,25 @@
 library(reshape)
-library(mhsmm)
-library(lubridate)
-library(xts)
+source("load_data.R")
 
 train <- trainFull[, c(1,3)]
 train$Date <- paste(trainFull$Date, trainFull$Time)
 train$Date <- as.POSIXct(train$Date, format='%d/%m/%Y %H:%M:%S')
+train <- na.omit(train)
+ 
 
 test1 <- test1Full[, c(1,3)]
 test1$Date <- paste(test1Full$Date, test1Full$Time)
 test1$Date <- as.POSIXct(test1$Date, format='%d/%m/%Y %H:%M:%S')
+test1 <- na.omit(test1)
 
 test2 <- test2Full[, c(1,3)]
 test2$Date <- paste(test2Full$Date, test2Full$Time)
 test2$Date <- as.POSIXct(test2$Date, format='%d/%m/%Y %H:%M:%S')
+test2 <- na.omit(test2)
 
-window <- c(5,10,15,20)
-threshold <- 1
+threshold <- c(0.5, 1, 1.25, 1.5, 1.75, 2) 
 
+windowSize <- 5
 # HMM Model
 # number of states HMM    
 k=7
@@ -40,8 +42,7 @@ startmodel <- hmmspec(init = init, trans = P, parms.emis = b, dens.emis = dnorm.
 # Validation set
 Length <- length(train$Date)
 start <- which(train$Date == as.POSIXct("2009-07-01 00:00:00"))
-
-#hmm <- hmmfit(train$Global_active_power[1:(start-1)], startmodel, mstep=mstep.norm, maxit=200)
+# hmm <- hmmfit(train$Global_active_power[1:(start-1)], startmodel, mstep=mstep.norm, maxit=200)
 
 validationSet <- train[(start:Length),]
 validationSet$timestamp <- as.numeric(validationSet$Date)
@@ -54,13 +55,13 @@ morning <- validationSet %>% filter(timestamp >= 21600 & timestamp < 57600)
 night <- validationSet %>% filter(timestamp >= 57600 | timestamp < 3600)
 
 # Divide the set by season
-summer1 <- dawn %>% filter(Date >= "2009-07-01 00:00:00" & Date <= "2009-07-31 00:00:00")
+summer1 <- dawn %>% filter(Date >= "2009-07-01 00:00:00" & Date <= "2009-08-31 00:00:00")
 summer1 <- matrix(summer1$Global_active_power, nrow=floor(nrow(summer1)/300), ncol=300, byrow=TRUE)
 
-summer2 <- morning %>% filter(Date >= "2009-07-01 00:00:00" & Date <= "2009-07-31 00:00:00")
+summer2 <- morning %>% filter(Date >= "2009-07-01 00:00:00" & Date <= "2009-08-31 00:00:00")
 summer2 <- matrix(summer2$Global_active_power, nrow=floor(nrow(summer2)/600), ncol=600, byrow=TRUE)
 
-summer3 <- night %>% filter(Date >= "2009-07-01 00:00:00" & Date <= "2009-07-31 00:00:00")
+summer3 <- night %>% filter(Date >= "2009-07-01 00:00:00" & Date <= "2009-08-31 00:00:00")
 summer3 <- matrix(summer3$Global_active_power[1:nrow(summer3)-1], nrow=floor(nrow(summer3)/540), ncol=540, byrow=TRUE)
 
 fall1 <- dawn %>% filter(Date >= "2009-09-01 00:00:00" & Date <= "2009-10-31 00:00:00")
@@ -81,36 +82,20 @@ winter2 <- matrix(winter2$Global_active_power[1:18000], nrow=floor(nrow(winter2)
 winter3 <- night %>% filter(Date >= "2009-11-01 00:00:00" & Date <= "2009-12-31 00:00:00")
 winter3 <- matrix(winter3$Global_active_power[70:15729], nrow=floor(nrow(winter3)/540), ncol=540, byrow=TRUE)
 
-logliks <- function(r, windowS){
-  loglikVals <- vector(mode="double", length=floor(ncol(r)/windowS))
-  for (s in seq(1,nrow(r))){
-    j = 1
-    for (i in seq(1,floor(ncol(r)/windowS))){
-      start <- (i-1)*windowS + 1
-      end = start + windowS -1
-      pred <- predict(hmm, r[s,(start:end)], method="viterbi")
-      thresholds <- abs(hmm$model$parms.emission$mu[pred$s]-pred$x)
-      if(length(which(thresholds > 1.0)) <= (0.5*windowS)){
-        loglikVals[j] = pred$loglik
-        j = j + 1;
-      }
-    }
-    if (s == 1){
-      MIN = min(loglikVals[which(loglikVals<0)])
-      MAX = max(loglikVals[which(loglikVals<0)])
-    }
-    else{
-      MIN2 = min(loglikVals[which(loglikVals<0)])
-      MAX2 = max(loglikVals[which(loglikVals<0)])
-      if (MIN2 < MIN){
-        MIN = MIN2
-      }
-      if (MAX2 > MAX){
-        MAX = MAX2
-      }
+logliks <- function(r, n, thresh){
+  loglikVals <- vector(mode="double", length=(n-windowSize-1))
+  j = 1
+  for (i in seq(1,(n-windowSize-1))){
+    start = i
+    end = i+windowSize-1
+    pred <- predict(hmm, r[start:end], method="viterbi")
+    thresholds <- abs(hmm$model$parms.emission$mu[pred$s]-pred$x)
+    if(length(which(thresholds > thresh)) <= (0.4*windowSize)){
+      loglikVals[j] = pred$loglik
+      j = j + 1;
     }
   }
-  return(as.data.frame(cbind(MIN, MAX)))
+  return(as.data.frame(cbind(min(loglikVals[which(loglikVals<0)]), max(loglikVals[which(loglikVals<0)]))))
 }
 
 getlogliks <- function(x, loglikValues){
@@ -151,49 +136,50 @@ getlogliks <- function(x, loglikValues){
   }
 }
 
-
-for (k in seq(1,4)){
-  windowSize <- window[k]
+for (k in seq(1,6)){
   # Calculate loglik intervals 
-  a1 <- logliks(summer1, windowSize)
-  a2 <- logliks(summer2, windowSize)
-  a3 <- logliks(summer3, windowSize)
-  b1 <- logliks(fall1, windowSize)
-  b2 <- logliks(fall2, windowSize)
-  b3 <- logliks(fall3, windowSize)
-  c1 <- logliks(winter1, windowSize)
-  c2 <- logliks(winter2, windowSize)
-  c3 <- logliks(winter3, windowSize)
+  a1 <- logliks(summer1[1,],ncol(summer1), threshold[k])
+  a2 <- logliks(summer2[1,],ncol(summer2), threshold[k])
+  a3 <- logliks(summer3[1,],ncol(summer3), threshold[k])
+  b1 <- logliks(fall1[1,],ncol(fall1), threshold[k])
+  b2 <- logliks(fall2[1,],ncol(fall2), threshold[k])
+  b3 <- logliks(fall3[1,],ncol(fall3), threshold[k])
+  c1 <- logliks(winter1[1,],ncol(winter1), threshold[k])
+  c2 <- logliks(winter2[1,],ncol(winter2), threshold[k])
+  c3 <- logliks(winter3[1,],ncol(winter3), threshold[k])
   loglikValuess <- rbind(a1,a2,a3,b1,b2,b3,c1,c2,c3)
-  Length <- floor(nrow(test1)/windowSize)
+
+  Length = nrow(test1)
   anomaly1 <- vector(mode="integer", length=Length)
   anomaly2 <- vector(mode="integer", length=Length)
+  # Anomaly Detection for each test data set
+  testset1 <- rbind(train[(length(train$Date)-windowSize+1):(length(train$Date)-1),], test1)
+  testset2 <- rbind(train[(length(train$Date)-windowSize+1):(length(train$Date)-1),], test2)
+  
   for (i in seq(1, Length)){
-    start <- (i-1)*windowSize + 1
-    end = start + windowSize -1
-    X1 <- predict(hmm, test1$Global_active_power[start:end], method="viterbi")
-    if (is.na(test1[start,1])){
-      next
-    }
-    minmax <- getlogliks(test1[start,1], loglikValuess)
+    start <- i
+    end <- i+windowSize-1
+    X1 <- predict(hmm, testset1$Global_active_power[start:end], method="viterbi")
+    minmax <- getlogliks(testset1[start,1], loglikValuess)
     if (X1$loglik >= minmax[1] & X1$loglik <= minmax[2]){
-      anomaly1[i] = 0
-    }else{
-      anomaly1[i] = 1
+      anomaly1[i] <- 0
+    } else{
+      anomaly1[i] <- 1
+      # substitute the current data point with the normal expectation 
+      testset1$Global_active_power[end] <- hmm$model$parms.emission$mu[X1$s[windowSize]]
     }
-    X2 <- predict(hmm, test2$Global_active_power[start:end], method="viterbi")
-    minmax <- getlogliks(test2[start,1], loglikValuess)
+    X2 <- predict(hmm, testset2$Global_active_power[start:end], method="viterbi")
+    minmax <- getlogliks(testset2[start,1], loglikValuess)
     if (X2$loglik >= minmax[1] & X2$loglik <= minmax[2]){
-      anomaly2[i] = 0
-    }else{
-      anomaly2[i] = 1
+      anomaly2[i] <- 0
+    } else{
+      anomaly2[i] <- 1
+      # substitute the current data point with the normal expectation 
+      testset2$Global_active_power[end] <- hmm$model$parms.emission$mu[X2$s[windowSize]]
     }
   }
   print(length(which(anomaly1==1))/Length)
   print(length(which(anomaly2==1))/Length)
-  
-  outfile1 <- paste("test1_collective_",windowSize,".txt",sep="")
-  outfile2 <- paste("test2_collective_",windowSize,".txt",sep="")
-  write.table(anomaly1, file=outfile1, sep=",",row.names=FALSE, col.names=FALSE)
-  write.table(anomaly2, file=outfile2, sep=",",row.names=FALSE, col.names=FALSE)  
+  outfile <- paste("point_",threshold[k],".txt",sep="")
+  write.table(c(anomaly1, anomaly2), file=outfile, sep=",",row.names=FALSE, col.names=FALSE)  
 }
