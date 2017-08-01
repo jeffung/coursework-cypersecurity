@@ -87,6 +87,6 @@ for (k in seq(1,4)){
   print(length(which(anomaly1==1))/Length)
   print(length(which(anomaly2==1))/Length)
   
-  outfile <- paste("coolective_",windowSize,".txt",sep="")
+  outfile <- paste("collective_",windowSize,".txt",sep="")
   write.table(c(anomaly1, anomaly2), file=outfile, sep=",",row.names=FALSE, col.names=FALSE)  
 }
